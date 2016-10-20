@@ -3,37 +3,46 @@
 	class EuroTraining{
 		
 		private $weights;
-		private $trainingSet;
-
-		function __construct($trainingSet){
+		
+		function __construct(){
 			$this->weights = EuroTraining::initializeWeights();
-			$this->trainingSet = $trainingSet;
 		}
 
-		public function delta($value,$weight,$wanted,$received){
+		private function delta($value,$weight,$wanted,$received){
 			$delta = ($wanted-$received)*1*$value;
 			$result = $weight+$delta;
 			return $result;
 		}		
 
-		public static function initializeWeights($x=50,$y=50){
+		private static function initializeWeights(){
+			
+			
 			$weights = array();
-
-			for($i = 0 ; $i<$y; $i++){
-				$weights[$i] = array();
-				for($j = 0 ; $j<$x; $j++){
-					$weights[$i][$j] = 0;
+			
+			if(!file_exists('weights.json')){
+				$x=50;
+				$y=50;
+				for($i = 0 ; $i<$y; $i++){
+					$weights[$i] = array();
+					for($j = 0 ; $j<$x; $j++){
+						$weights[$i][$j] = 0;
+					}
 				}
+			}else{
+
+				$weightsJSON = file_get_contents('weights.json');
+				$weights = json_decode($weightsJSON);
+
 			}
 
 			return $weights;		
 		}
 
-		public function training(){
+		public function training(TrainingSet $trainingSet){
 
-			while (!($this->trainingSet->trainingSetResult($this->weights))){
+			while (!($trainingSet->trainingSetResult($this->weights))){
 				
-				foreach ($this->trainingSet->getArraySet() as $element) {
+				foreach ($trainingSet->getArraySet() as $element) {
 
 					if(!$element->isTrained($this->weights)){
 
@@ -57,12 +66,26 @@
 				}
 			}
 
-			
+			$this->saveWeights('weights.json');			
+		}
 
-			
+		private function saveWeights($filename){
+			file_put_contents($filename, json_encode($this->weights));
+		}
 
-
+		public function getWeights(){
 			return $this->weights;
+		}
+
+		public function isTrained(){
+			$result = false;
+			foreach ($this->weights as $line) {
+				foreach ($line as $weight) {
+					$result = $result||$weight!=0;
+				}
+			}
+
+			return $result;		
 		}
  	
 	}
